@@ -28,3 +28,18 @@
     background-color: #000;
     color: #fff;
 }
+
+.logout{
+    color: #000;
+    padding: .4em .6em;
+    border-radius: 5px;
+    cursor: pointer;
+}
+
+.logout:hover{
+    background-color: #000;
+    color: #fff;
+    padding: .4em .6em;
+    border-radius: 5px;
+    cursor: pointer;
+}

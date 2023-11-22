@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react'
 import { userAuthentication } from '../../hooks/userAuthentication'
+import { useNavigate } from "react-router-dom";
 
 const Register = () => {
   const [displayName, setDisplayName] = useState('')
@@ -8,6 +9,7 @@ const Register = () => {
   const [confirmedPassword, setCorfimedPassword] = useState('')
   const [error, setError] = useState('')
 
+  const navigate = useNavigate()
   const {createUser, error: authError, loading} = userAuthentication()
   
   const handlerSubmit = async (e) => {
@@ -24,9 +26,16 @@ const Register = () => {
       return
     }
 
-    const res = await createUser(user)
-
-    console.table(res)
+    try {
+      const res = await createUser(user)
+      if(res){
+        console.table(res)
+        navigate('/login')
+      }
+      
+    } catch (error) {
+      console.error(error.message)
+    }
   }
   useEffect(() => {
     if(authError){

@@ -1,18 +1,20 @@
-import { db } from '../firebase/config';
+import { db } from "../firebase/config";
 import {
   getAuth,
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
   updateProfile,
   signOut,
-} from 'firebase/auth';
-import { useState, useEffect } from 'react';
+} from "firebase/auth";
+import { useState, useEffect } from "react";
 
-//Autentição-Criação
+
 export const userAuthentication = () => {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(null);
   const [cancelled, setCancelled] = useState(false);
+
+
 
   const auth = getAuth();
 
@@ -36,7 +38,7 @@ export const userAuthentication = () => {
       await updateProfile(user, {
         displayName: data.displayName,
       });
-
+      userLogout(auth);
       setLoading(false);
 
       return user;
@@ -60,7 +62,7 @@ export const userAuthentication = () => {
       setError(systemErrorMessage);
     }
   }
-  async function userLogin (data){
+  async function userLogin(data) {
     checkIfIsCancelled();
     setLoading(true);
     setError(null);
@@ -82,8 +84,7 @@ export const userAuthentication = () => {
       let systemErrorMessage;
 
       if (error.message.includes("invalid")) {
-        systemErrorMessage =
-          "Informações de login ta esquisita, Konoyaro!";
+        systemErrorMessage = "Informações de login ta esquisita, Konoyaro!";
       } else {
         systemErrorMessage =
           "Ocorreu um erro, tente novamente mais tarde, Bakayaro!";
@@ -92,17 +93,37 @@ export const userAuthentication = () => {
       setLoading(false);
       setError(systemErrorMessage);
     }
+  }
+  async function userLogout(data) {
+    checkIfIsCancelled();
+    setLoading(true);
+    setError(null);
 
+    try {
+      await signOut(auth);
+
+
+      setLoading(false);
+    } catch (error) {
+      console.error(error.message);
+      console.table(typeof error.message);
+
+      let systemErrorMessage = error.message;
+
+      setLoading(false);
+      setError(systemErrorMessage);
+    }
   }
   useEffect(() => {
-    return () => setCancelled(true); 
+    return () => setCancelled(true);
   }, []);
 
-    return {
-        auth,
-        createUser,
-        userLogin,
-        error,
-        loading,
-    }
-}
+  return {
+    auth,
+    createUser,
+    userLogin,
+    userLogout,
+    error,
+    loading,
+  };
+};
