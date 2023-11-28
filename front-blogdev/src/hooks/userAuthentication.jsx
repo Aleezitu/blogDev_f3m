@@ -60,40 +60,12 @@ export const userAuthentication = () => {
       setError(systemErrorMessage);
     }
   }
-  async function userLogin (data){
+
+  const logout = () => {
     checkIfIsCancelled();
-    setLoading(true);
-    setError(null);
-
-    try {
-      const { user } = await signInWithEmailAndPassword(
-        auth,
-        data.email,
-        data.password
-      );
-
-      setLoading(false);
-
-      return user;
-    } catch (error) {
-      console.error(error.message);
-      console.table(typeof error.message);
-
-      let systemErrorMessage;
-
-      if (error.message.includes("invalid")) {
-        systemErrorMessage =
-          "Informações de login ta esquisita, Konoyaro!";
-      } else {
-        systemErrorMessage =
-          "Ocorreu um erro, tente novamente mais tarde, Bakayaro!";
-      }
-
-      setLoading(false);
-      setError(systemErrorMessage);
-    }
-
+    signOut(auth);
   }
+
   useEffect(() => {
     return () => setCancelled(true); 
   }, []);
@@ -101,8 +73,8 @@ export const userAuthentication = () => {
     return {
         auth,
         createUser,
-        userLogin,
         error,
         loading,
+        logout
     }
 }

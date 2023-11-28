@@ -10,6 +10,8 @@ import About from "./pages/About/About";
 import Navbar from "./components/Navbar";
 import Footer from "./components/Footer";
 import Register from "./pages/Register/Register";
+import CreatePost from "./pages/CreatePost/CreatePost";
+import Dashboard from "./pages/Dashboard/Dashboard";
 import Login from "./pages/Login/Login";
 
 function App() {
@@ -65,6 +67,8 @@ function App() {
               <Route path="/about" element={<About />}></Route>
               <Route path="/register" element={<Register />}></Route>
               <Route path="/login" element={<Login />}></Route>
+              <Route path="/post/create" element={<CreatePost />}></Route>
+              <Route path="/post/create" element={<Dashboard />}></Route>
             </Routes>
           </div>
           <Footer />
