@@ -1,110 +1,133 @@
-import { db } from "../firebase/config";
+import { useState, useEffect } from 'react';
 import {
-  getAuth,
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  updateProfile,
-  signOut,
-} from "firebase/auth";
-import { useState, useEffect } from "react";
+	getAuth,
+	createUserWithEmailAndPassword,
+	signInWithEmailAndPassword,
+	updateProfile,
+	signOut,
+	signInWithPopup,
+	GoogleAuthProvider
+} from 'firebase/auth';
+const provider = new GoogleAuthProvider();
+import { db } from '../firebase/config';
 
-//Autentição-Criação
 export const userAuthentication = () => {
-  const [error, setError] = useState(null);
-  const [loading, setLoading] = useState(null);
-  const [cancelled, setCancelled] = useState(false);
+	const [authError, setAuthError] = useState(null)
+	const [loading, setLoading] = useState(null)
 
-  const auth = getAuth();
+	const auth = getAuth()
 
-  function checkIfIsCancelled() {
-    if (cancelled) {
-      return;
-    }
-  }
-  async function createUser(data) {
-    checkIfIsCancelled();
-    setLoading(true);
-    setError(null);
+	async function createUser(data) {
+		setLoading(true)
+		setAuthError(null)
 
-    try {
-      const { user } = await createUserWithEmailAndPassword(
-        auth,
-        data.email,
-        data.password
-      );
+		try {
+			const { user } = await createUserWithEmailAndPassword(auth, data.email, data.password)
 
-      await updateProfile(user, {
-        displayName: data.displayName,
-      });
+			await updateProfile(user, {
+				displayName: data.displayName
+			})
 
-      setLoading(false);
+			setLoading(false)
 
-      return user;
-    } catch (error) {
-      console.error(error.message);
-      console.table(typeof error.message);
+			return user
+		} catch (error) {
+			let systemErrorMessage;
 
-      let systemErrorMessage;
+			switch (error.code) {
+				case 'auth/email-already-in-use':
+					systemErrorMessage = 'E-mail já cadastrado';
+					break;
+				case 'auth/invalid-email':
+					systemErrorMessage = 'O e-mail fornecido não é válido';
+					break;
+				case 'auth/operation-not-allowed':
+					systemErrorMessage = 'Operação não permitida';
+					break;
+				case 'auth/weak-password':
+					systemErrorMessage = 'A senha precisa conter pelo menos 6 caracteres';
+					break;
+				default:
+					systemErrorMessage = 'Ocorreu um erro, tente novamente mais tarde';
+			}
 
-      if (error.message.includes("Password")) {
-        systemErrorMessage =
-          "A senha precisa conter pelo menos 6 caracteres, Baaaaka!";
-      } else if (error.message.includes("email-already")) {
-        systemErrorMessage = "O e-mail já está cadastrado, Baaaaka!";
-      } else {
-        systemErrorMessage =
-          "Ocorreu um erro, tente novamente mais tarde, Baaaaka!";
-      }
+			setLoading(false)
+			setAuthError(systemErrorMessage)
+		}
+	}
 
-      setLoading(false);
-      setError(systemErrorMessage);
-    }
-  }
+	const login = async (data) => {
+		setLoading(true);
+		setAuthError(null);
 
-  const logout = (data) => {
-    checkIfIsCancelled();
-    signOut(auth);
-  };
+		try {
 
-  const login = async (data) => {
-    checkIfIsCancelled();
+			const userLogin = await signInWithEmailAndPassword(auth, data.email, data.password);
+			setLoading(false);
+			return userLogin;
+		} catch (error) {
+			let systemErrorMessage;
 
-    setLoading(true);
-    setError(false);
+			switch (error.code) {
+				case 'auth/invalid-login-credentials':
+					systemErrorMessage = `Há erros com suas credenciais`;
+					break;
+				case 'auth/user-disabled':
+					systemErrorMessage = 'O usuário com este e-mail foi desabilitado';
+					break;
+				default:
+					systemErrorMessage = 'Ocorreu um erro, tente novamente mais tarde';
+			}
 
-    try {
-      await signInWithEmailAndPassword(auth, data.email, data.password);
-      setLoading(false)
-    } catch (error) {
-      console.error(error.message);
-      console.table(typeof error.message);
+			setLoading(false)
+			setAuthError(systemErrorMessage)
+		}
 
-      let systemErrorMessage;
+	}
 
-      if (error.message.includes("invalid-login-credentials")) {
-        systemErrorMessage = "Este usuário nao está logando, Sensei!";
-      } else if (error.message.includes("wrong-password")) {
-        systemErrorMessage = "Há erro com suas credenciais, Baaaaka!";
-      } else {
-        systemErrorMessage =
-          "Ocorreu um erro, tente novamente mais tarde, Baaaaka!";
-      }
+	const login_with_google = async () => {
+		setLoading(true)
+		setAuthError(null)
 
-      setLoading(false);
-      setError(systemErrorMessage);
-    }
-  };
+		await signInWithPopup(auth, provider).then((result) => {
+			const credential = GoogleAuthProvider.credentialFromResult(result)
+			const token = credential.accessToken
+			const user = result.user
+			console.log(user)
+			return user
+		}).catch((error) => {
+			let systemErrorMessage;
 
-  useEffect(() => {
-    return () => setCancelled(true);
-  }, []);
+			switch (error.code) {
+				case 'auth/popup-closed-by-user':
+					systemErrorMessage = 'O popup de autenticação foi fechado antes da operação ser concluída.';
+					break;
+				case 'auth/cancelled-popup-request':
+					systemErrorMessage = 'Múltiplas solicitações de popups foram feitas.';
+					break;
+				case 'auth/operation-not-allowed':
+					systemErrorMessage = 'A operação não é permitida.';
+					break;
+				default:
+					systemErrorMessage = 'Ocorreu um erro, tente novamente mais tarde.';
+			}
 
-  return {
-    auth,
-    createUser,
-    error,
-    loading,
-    login,
-    logout,
-  };
-};
+			setAuthError(systemErrorMessage)
+		})
+		setLoading(false)
+	}
+
+	const logout = () => {
+		signOut(auth)
+	}
+
+	return {
+		auth,
+		createUser,
+		login, 
+		login_with_google,
+		logout,
+		authError,
+		loading
+	}
+}

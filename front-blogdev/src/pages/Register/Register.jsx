@@ -1,38 +1,50 @@
-import { useState, useEffect } from 'react'
-import { userAuthentication } from '../../hooks/userAuthentication'
+import React, { useState, useEffect } from 'react'
+import { userAuthentication } from '../../hooks/userAuthentication';
+import { useNavigate } from 'react-router-dom'
 
-const Register = () => {
-  const [displayName, setDisplayName] = useState('')
-  const [email, setEmail] = useState('')
-  const [password, setPassword] = useState('')
-  const [confirmedPassword, setCorfimedPassword] = useState('')
-  const [error, setError] = useState('')
+export default function Register() {
+  const [displayName, setDisplayName] = useState('');
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [confirmedPassword, setConfirmedPassword] = useState('');
+  const [error, setError] = useState('');
 
-  const {createUser, error: authError, loading} = userAuthentication()
-  
+  const { createUser, authError, loading } = userAuthentication()
+  const navigate = useNavigate()
+
   const handlerSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
+    e.preventDefault();
+    setError('');
+
     const user = {
       displayName,
       email,
       password
     }
 
-    if(password != confirmedPassword){
-      setError('As senhas precisam ser iguais, onii-chan >.<"')
+    if (password !== confirmedPassword) {
+      setError('As senhas precisam ser iguais!')
       return
     }
 
-    const res = await createUser(user)
+    try {
+      const res = await createUser(user)
+      if (res) {
+        alert('Cadastro realizado com sucesso!');
+        navigate('/')
+      }
+    } catch (error) {
+      console.error('Erro ao cadastrar o usuario:', error);
+      setError('Erro ao cadastrar o usuario, porfavor tente novamente mais tarde')
+    }
+  };
 
-    console.table(res)
-  }
   useEffect(() => {
-    if(authError){
+    if (authError) {
       setError(authError)
     }
-  },[authError])
+  }, [authError])
+
   return (
     <div>
       <h1>Compartilhe suas experiências com outros nomades</h1>
@@ -46,6 +58,7 @@ const Register = () => {
             onChange={(e) => setDisplayName(e.target.value)}
             placeholder='Entre com seu nome nomade' />
         </label>
+
         <label>
           <span>E-mail: </span>
           <input type="email"
@@ -55,6 +68,7 @@ const Register = () => {
             onChange={(e) => setEmail(e.target.value)}
             placeholder='Entre com seu e-mail' />
         </label>
+
         <label>
           <span>Senha: </span>
           <input type="password"
@@ -64,21 +78,21 @@ const Register = () => {
             onChange={(e) => setPassword(e.target.value)}
             placeholder='Entre com sua senha' />
         </label>
+
         <label>
           <span>Confirmação: </span>
           <input type="password"
             name="confirmedPassword"
             required
             value={confirmedPassword}
-            onChange={(e) => setCorfimedPassword(e.target.value)}
+            onChange={(e) => setConfirmedPassword(e.target.value)}
             placeholder='Entre com sua senha' />
-        </label>        
-        {!loading && <button className='btn'>Cadastrar</button>}
-        {loading && <button className='btn'>Aguarde...</button>}
+        </label>
+
+        <button className='btn' disabled={loading}>{!loading ? 'Cadastrar' : 'Aguarde...'}</button>
         {error && <p className='error'>{error}</p>}
+
       </form>
     </div>
   )
 }
-
-export default Register;
